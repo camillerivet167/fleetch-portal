@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fleetch — Mon suivi</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1e70ec;
+    --blue-light: #e8f1fd;
+    --blue-dark: #0d4fa8;
+    --blue-mid: #4d8ef0;
+    --green: #00c97a;
+    --green-light: #e0faf0;
+    --orange: #ff7a2f;
+    --orange-light: #fff0e8;
+    --bg: #f4f7ff;
+    --card: #ffffff;
+    --text: #0d1b2a;
+    --text-muted: #6b7a99;
+    --border: #dce5f5;
+    --radius: 18px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND DECORATIONS */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(30,112,236,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px; left: -150px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,201,122,0.09) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    background: white;
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    box-shadow: 0 2px 20px rgba(30,112,236,0.07);
+  }
+
+  .logo-wrap svg { height: 32px; width: auto; }
+
+  .header-badge {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--blue-light);
+    color: var(--blue);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .hero-title span { color: var(--blue); }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+  }
+
+  /* SEARCH BOX */
+  .search-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 1.75rem;
+    box-shadow: 0 4px 32px rgba(30,112,236,0.08);
+    margin-bottom: 2rem;
+  }
+
+  .search-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .search-input-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .search-input-wrap svg.search-icon {
+    position: absolute;
+    left: 14px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  #search-input {
+    width: 100%;
+    padding: 13px 14px 13px 44px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #search-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(30,112,236,0.12);
+    background: white;
+  }
+  #search-input::placeholder { text-transform: none; letter-spacing: normal; color: #aab5cc; }
+
+  /* SUGGESTIONS DROPDOWN */
+  #suggestions {
+    display: none;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(30,112,236,0.12);
+    margin-top: 4px;
+  }
+  .suggestion-item {
+    padding: 11px 16px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover { background: var(--blue-light); }
+  .suggestion-item .plate-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    background: var(--text);
+    color: white;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: 0.05em;
+  }
+  .suggestion-item .suggestion-name {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .hint-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hint-text svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  /* RESULT CARD */
+  #result-section { display: none; }
+
+  .result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap; gap: 8px;
+  }
+
+  .driver-identity {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .driver-avatar {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .driver-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .driver-plate {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .formule-badge {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* METRIC CARDS */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 1.25rem;
+    box-shadow: 0 2px 16px rgba(30,112,236,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+  .metric-card.blue::before { background: var(--blue); }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.orange::before { background: var(--orange); }
+
+  .metric-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .metric-card.blue .metric-icon { background: var(--blue-light); }
+  .metric-card.green .metric-icon { background: var(--green-light); }
+  .metric-card.orange .metric-icon { background: var(--orange-light); }
+
+  .metric-icon svg { width: 18px; height: 18px; }
+  .metric-card.blue .metric-icon svg { color: var(--blue); }
+  .metric-card.green .metric-icon svg { color: var(--green); }
+  .metric-card.orange .metric-icon svg { color: var(--orange); }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .metric-unit {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 3px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    padding: 1.5rem;
+    box-shadow: 0 2px 16px rgba(30,112,236,0.06);
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem;
+  }
+  .progress-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .progress-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--blue);
+  }
+
+  .progress-bar-bg {
+    height: 14px;
+    border-radius: 999px;
+    background: var(--blue-light);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--blue-mid) 100%);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .progress-milestones {
+    display: flex; justify-content: space-between;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* MOTIVATION MESSAGE */
+  .motivation-card {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    color: white;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 8px 24px rgba(30,112,236,0.25);
+  }
+  .motivation-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+  .motivation-text {
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.95;
+  }
+  .motivation-text strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  /* RESET BUTTON */
+  .reset-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 1.5rem;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .reset-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-light);
+  }
+
+  /* ERROR STATE */
+  #error-section {
+    display: none;
+    background: #fff2f2;
+    border: 1.5px solid #ffd0d0;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    color: #c0392b;
+    font-size: 14px;
+    display: none; align-items: center; gap: 10px;
+  }
+
+  /* EMPTY STATE */
+  #no-result {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  #no-result svg { width: 40px; height: 40px; margin: 0 auto 0.75rem; display: block; opacity: 0.4; }
+
+  /* DATA TIMESTAMP */
+  .data-info {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3rem;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .data-info svg { width: 12px; height: 12px; }
+
+  /* CONFIG NOTICE */
+  .config-notice {
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: #92400e;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+  .config-notice code {
+    background: rgba(0,0,0,0.08);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  @media (max-width: 480px) {
+    main { padding: 2rem 1rem 3rem; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    header { padding: 0 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <!-- LOGO FLEETCH SVG inline simplifié -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1820 420" style="height:34px;width:auto">
+      <polygon fill="#1e70ec" points="267.57 219.75 357.34 219.75 370.56 137.2 180.21 137.2 136.53 413.71 237.92 413.71 251.14 329.55 334.5 329.55 346.52 252.61 262.36 252.61 267.57 219.75"/>
+      <polygon fill="#1e70ec" points="500.81 137.2 399.42 137.2 355.74 413.71 545.29 413.71 558.52 329.55 470.35 329.55 500.81 137.2"/>
+      <polygon fill="#1e70ec" points="689.56 312.32 777.72 312.32 789.34 238.58 701.58 238.58 705.19 216.14 798.16 216.14 810.58 137.2 617.02 137.2 572.94 413.71 770.51 413.71 782.93 334.76 685.95 334.76 689.56 312.32"/>
+      <polygon fill="#1e70ec" points="799.55 413.71 997.11 413.71 1009.53 334.76 912.56 334.76 916.16 312.32 1004.32 312.32 1015.95 238.58 928.18 238.58 931.79 216.14 1024.76 216.14 1037.19 137.2 843.63 137.2 799.55 413.71"/>
+      <polygon fill="#1e70ec" points="1284.83 137.2 1066.43 137.2 1053.2 221.35 1111.71 221.35 1081.25 413.71 1182.64 413.71 1213.1 221.35 1271.61 221.35 1284.83 137.2"/>
+      <path fill="#1e70ec" d="M1426.67,330.35c-31.25,0-49.29-17.23-49.29-48.49s18.84-61.31,56.51-61.31c20.44,0,41.67,8.82,53.7,22.44l36.46-81.35c-19.63-17.23-52.49-29.25-91.36-29.25-95.78,0-156.29,72.53-156.29,158.29,0,80.55,52.89,127.84,133.04,127.84,33.26,0,68.53-8.02,88.17-22.85l-16.03-84.95c-15.23,12.42-34.87,19.63-54.91,19.63Z"/>
+      <polygon fill="#1e70ec" points="1817.4 137.2 1716.01 137.2 1700.78 234.18 1650.69 234.18 1665.92 137.2 1564.53 137.2 1520.85 413.71 1622.24 413.71 1637.47 318.33 1788.79 318.33 1817.4 137.2"/>
+      <path fill="#1e70ec" d="M1742.14,331.75c-32.2,0-62.32,26.1-67.29,58.3-4.96,32.2,17.12,58.3,49.32,58.3s62.32-26.1,67.29-58.3c4.96-32.2-17.12-58.3-49.32-58.3Z"/>
+    </svg>
+  </div>
+  <div class="header-badge">
+    <span class="live-dot"></span>
+    Mon suivi
+  </div>
+</header>
+
+<main>
+
+  <!-- CONFIG NOTICE -->
+  <div class="config-notice" id="config-notice" style="display:none">
+    ⚙️ <strong>Configuration requise :</strong> Remplace <code>COLLE_TON_URL_ICI</code> dans le code par l'URL CSV de ton Google Sheet publié. <a href="#" onclick="document.getElementById('config-notice').style.display='none';return false;" style="color:#92400e;font-weight:600;">Masquer</a>
+  </div>
+
+  <h1 class="hero-title">Suis ta progression<br><span>vers ta voiture 🚗</span></h1>
+  <p class="hero-sub">Entre ta plaque d'immatriculation pour voir où tu en es.</p>
+
+  <!-- SEARCH -->
+  <div class="search-card">
+    <label class="search-label" for="search-input">Plaque d'immatriculation</label>
+    <div class="search-input-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="2" y="6" width="20" height="12" rx="2" stroke-width="2"/>
+        <circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+        <line x1="9" y1="12" x2="15" y2="12" stroke-width="2"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Ex : AB-123-CD" autocomplete="off" />
+    </div>
+    <div id="suggestions"></div>
+    <p class="hint-text">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+      Tape les premières lettres pour voir les suggestions
+    </p>
+  </div>
+
+  <!-- NO RESULT -->
+  <div id="no-result">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="1.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="1.5"/></svg>
+    Aucune plaque trouvée. Vérifie l'orthographe ou contacte Fleetch.
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-section">
+    <div class="result-header">
+      <div class="driver-identity">
+        <div class="driver-avatar" id="driver-avatar">?</div>
+        <div>
+          <div class="driver-name" id="driver-name">—</div>
+          <div class="driver-plate" id="driver-plate">—</div>
+        </div>
+      </div>
+      <div class="formule-badge" id="formule-badge">—</div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card blue">
+        <div class="metric-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/></svg>
+        </div>
+        <div class="metric-label">Mois restants</div>
+        <div class="metric-value"><span id="mois-restant">—</span><span class="metric-unit">mois</span></div>
+      </div>
+      <div class="metric-card orange">
+        <div class="metric-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
+        </div>
+        <div class="metric-label">Shifts restants</div>
+        <div class="metric-value"><span id="shift-restant">—</span><span class="metric-unit">j</span></div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-card">
+      <div class="progress-header">
+        <div class="progress-title">🚗 Part de la voiture acquise</div>
+        <div class="progress-pct" id="progress-pct">0%</div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar" style="width: 0%"></div>
+      </div>
+      <div class="progress-milestones">
+        <span>0%</span>
+        <span>25%</span>
+        <span>50%</span>
+        <span>75%</span>
+        <span>100% 🎉</span>
+      </div>
+    </div>
+
+    <!-- MOTIVATION -->
+    <div class="motivation-card" id="motivation-card">
+      <div class="motivation-icon" id="motivation-icon">💪</div>
+      <div class="motivation-text" id="motivation-text">
+        <strong id="motivation-title">Courage !</strong>
+        <span id="motivation-body">Tu es sur la bonne voie.</span>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetSearch()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+      Rechercher une autre plaque
+    </button>
+  </div>
+
+  <div class="data-info">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="1.5"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+    Données mises à jour quotidiennement · <span id="last-update">—</span>
+  </div>
+
+</main>
+
+<script>
+// ============================================================
+// 🔧 CONFIGURATION — MODIFIE UNIQUEMENT CETTE PARTIE
+// ============================================================
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnDr2RMxxIhmjL8vFRTjul3ie1RU9zPeRoicAC_QOnPZqG-ci09MUndS4kIQGwPHxxgREvm3rMGbk_/pub?gid=372197913&single=true&output=csv';
+// Pour obtenir cette URL :
+// 1. Ouvre ton Google Sheet
+// 2. Fichier → Partager → Publier sur le web
+// 3. Choisir "Feuille 1" + format "CSV"
+// 4. Copie l'URL et colle-la ici
+
+// Noms exacts de tes colonnes dans le sheet (sensible à la casse)
+const COL_PLAQUE       = 'Plaque';
+const COL_CHAUFFEUR    = 'Chauffeur';
+const COL_FORMULE      = 'Formule';
+const COL_MOIS         = 'Mois Restant';
+const COL_SHIFT        = 'Shift Restant';
+const COL_PART         = 'Part de la voiture déjà acquise';
+// ============================================================
+
+let allDrivers = []; // { plaque, chauffeur, formule, moisRestant, shiftRestant, partAcquise }
+
+// Parse CSV
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || lines[i].split(',');
+    const obj = {};
+    headers.forEach((h, idx) => {
+      obj[h] = (cells[idx] || '').replace(/^"|"$/g, '').trim();
+    });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+// Group by plate, keep last row per plate
+function buildDriverMap(rows) {
+  const map = {};
+  rows.forEach(row => {
+    const plaque = (row[COL_PLAQUE] || '').toUpperCase().trim();
+    if (!plaque) return;
+    map[plaque] = row; // always overwrite → last row wins
+  });
+  return map;
+}
+
+// Load data (cached 1/day in sessionStorage)
+async function loadData() {
+  const cacheKey = 'fleetch_data_' + new Date().toDateString();
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    processData(JSON.parse(cached));
+    return;
+  }
+
+  if (SHEET_CSV_URL === 'COLLE_TON_URL_ICI') {
+    // DEMO MODE avec données fictives
+    const demoRows = [
+      { [COL_PLAQUE]: 'AB-123-CD', [COL_CHAUFFEUR]: 'Jean Dupont', [COL_FORMULE]: 'Formule 24 mois', [COL_MOIS]: '14', [COL_SHIFT]: '42', [COL_PART]: '45' },
+      { [COL_PLAQUE]: 'AB-123-CD', [COL_CHAUFFEUR]: 'Jean Dupont', [COL_FORMULE]: 'Formule 24 mois', [COL_MOIS]: '12', [COL_SHIFT]: '36', [COL_PART]: '55' },
+      { [COL_PLAQUE]: 'EF-456-GH', [COL_CHAUFFEUR]: 'Marie Martin', [COL_FORMULE]: 'Formule 18 mois', [COL_MOIS]: '3', [COL_SHIFT]: '8', [COL_PART]: '82' },
+      { [COL_PLAQUE]: 'IJ-789-KL', [COL_CHAUFFEUR]: 'Karim Benali', [COL_FORMULE]: 'Formule 12 mois', [COL_MOIS]: '1', [COL_SHIFT]: '3', [COL_PART]: '97' },
+      { [COL_PLAQUE]: 'MN-012-OP', [COL_CHAUFFEUR]: 'Sofia Nguyen', [COL_FORMULE]: 'Formule 36 mois', [COL_MOIS]: '28', [COL_SHIFT]: '84', [COL_PART]: '15' },
+    ];
+    processData(demoRows);
+    document.getElementById('last-update').textContent = 'Mode démo — connecte ton Google Sheet';
+    return;
+  }
+
+  const proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_CSV_URL),
+    'https://corsproxy.io/?' + encodeURIComponent(SHEET_CSV_URL),
+    'https://cors-anywhere.herokuapp.com/' + SHEET_CSV_URL,
+  ];
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text || text.length < 10) continue;
+      const rows = parseCSV(text);
+      if (rows.length === 0) continue;
+      sessionStorage.setItem(cacheKey, JSON.stringify(rows));
+      processData(rows);
+      return;
+    } catch (e) { continue; }
+  }
+  console.error('Tous les proxies ont échoué');
+}
+
+function processData(rows) {
+  const map = buildDriverMap(rows);
+  allDrivers = Object.entries(map).map(([plaque, row]) => ({
+    plaque,
+    chauffeur: row[COL_CHAUFFEUR] || '?',
+    formule: row[COL_FORMULE] || '—',
+    moisRestant: row[COL_MOIS] || '0',
+    shiftRestant: row[COL_SHIFT] || '0',
+    partAcquise: parseFloat((row[COL_PART] || '0').replace('%','').replace(',','.')) || 0,
+  }));
+  const now = new Date();
+  document.getElementById('last-update').textContent =
+    'Dernière mise à jour : ' + now.toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'});
+}
+
+// Search
+const input = document.getElementById('search-input');
+const suggestionsEl = document.getElementById('suggestions');
+
+input.addEventListener('input', () => {
+  const q = input.value.trim().toUpperCase();
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('no-result').style.display = 'none';
+  if (q.length < 2) { suggestionsEl.style.display = 'none'; return; }
+
+  const matches = allDrivers.filter(d => d.plaque.includes(q)).slice(0, 6);
+  if (matches.length === 0) { suggestionsEl.style.display = 'none'; return; }
+
+  suggestionsEl.innerHTML = matches.map(d => `
+    <div class="suggestion-item" onclick="selectDriver('${d.plaque}')">
+      <span class="plate-badge">${d.plaque}</span>
+      <span class="suggestion-name">${d.chauffeur}</span>
+    </div>
+  `).join('');
+  suggestionsEl.style.display = 'block';
+});
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = input.value.trim().toUpperCase();
+    const match = allDrivers.find(d => d.plaque === q);
+    if (match) selectDriver(match.plaque);
+    else if (allDrivers.filter(d => d.plaque.includes(q)).length === 1) {
+      selectDriver(allDrivers.find(d => d.plaque.includes(q)).plaque);
+    }
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-card')) suggestionsEl.style.display = 'none';
+});
+
+function selectDriver(plaque) {
+  const driver = allDrivers.find(d => d.plaque === plaque);
+  if (!driver) {
+    document.getElementById('no-result').style.display = 'block';
+    suggestionsEl.style.display = 'none';
+    return;
+  }
+  input.value = driver.plaque;
+  suggestionsEl.style.display = 'none';
+
+  // Fill result
+  const initials = driver.chauffeur.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('driver-avatar').textContent = initials;
+  document.getElementById('driver-name').textContent = driver.chauffeur;
+  document.getElementById('driver-plate').textContent = driver.plaque;
+  document.getElementById('formule-badge').textContent = driver.formule;
+  document.getElementById('mois-restant').textContent = driver.moisRestant;
+  document.getElementById('shift-restant').textContent = driver.shiftRestant;
+
+  const pct = Math.min(100, Math.max(0, driver.partAcquise));
+  document.getElementById('progress-pct').textContent = Math.round(pct) + '%';
+
+  // Animate bar
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = '0%';
+  setTimeout(() => { bar.style.width = pct + '%'; }, 100);
+
+  // Motivation
+  const { icon, title, body } = getMotivation(pct, driver.shiftRestant);
+  document.getElementById('motivation-icon').textContent = icon;
+  document.getElementById('motivation-title').textContent = title;
+  document.getElementById('motivation-body').textContent = body;
+
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('no-result').style.display = 'none';
+
+  // Smooth scroll
+  setTimeout(() => {
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function getMotivation(pct, shiftRestant) {
+  if (pct >= 100) return { icon: '🎉', title: 'Félicitations !', body: 'Tu as acquis ta voiture à 100% — bravo pour ton engagement !' };
+  if (pct >= 75) return { icon: '🏁', title: 'La ligne d\'arrivée approche !', body: `Plus que ${shiftRestant} shifts et ta voiture est à toi. Tu y es presque !` };
+  if (pct >= 50) return { icon: '🔥', title: 'Plus de la moitié du chemin !', body: `Tu as déjà acquis ${Math.round(pct)}% de ta voiture. Continue comme ça !` };
+  if (pct >= 25) return { icon: '💪', title: 'Bel élan !', body: `Tu progresses bien avec ${Math.round(pct)}% acquis. Chaque shift compte !` };
+  return { icon: '🚀', title: 'C\'est parti !', body: 'Chaque shift te rapproche de ta voiture. La route est belle devant toi !' };
+}
+
+function resetSearch() {
+  input.value = '';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('no-result').style.display = 'none';
+  input.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>
