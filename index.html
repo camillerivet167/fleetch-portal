@@ -690,10 +690,11 @@ async function loadData() {
   }
 
   try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbxC7ll1NEWYxunNFuK8XSPOw4P3hTf7ZHbcUzU1TxkOYugt_s72gSA_lUEO-PH5iDJs/exec');
+    const res = await fetch('https://script.google.com/a/macros/fleetch.net/s/AKfycbzYQGDKCeaJt6uaVxkgUl4gHRflrAUt8nt2dZUoa3d-IK-23R1r0KD8OUj2IEI-7UI/exec');
     if (!res.ok) throw new Error('Erreur réseau');
     const text = await res.text();
-    const rows = parseCSV(text);
+    let rows;
+    try { rows = JSON.parse(text); } catch(e) { rows = parseCSV(text); }
     sessionStorage.setItem(cacheKey, JSON.stringify(rows));
     processData(rows);
   } catch (e) {
