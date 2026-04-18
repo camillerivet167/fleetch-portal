@@ -690,7 +690,7 @@ async function loadData() {
   }
 
   try {
-    const res = await fetch('https://script.google.com/a/macros/fleetch.net/s/AKfycbzYQGDKCeaJt6uaVxkgUl4gHRflrAUt8nt2dZUoa3d-IK-23R1r0KD8OUj2IEI-7UI/exec');
+    const res = await fetch('/api/data');
     if (!res.ok) throw new Error('Erreur réseau');
     const text = await res.text();
     let rows;
