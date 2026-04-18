@@ -620,7 +620,7 @@
 // ============================================================
 // 🔧 CONFIGURATION — MODIFIE UNIQUEMENT CETTE PARTIE
 // ============================================================
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnDr2RMxxIhmjL8vFRTjul3ie1RU9zPeRoicAC_QOnPZqG-ci09MUndS4kIQGwPHxxgREvm3rMGbk_/pub?gid=372197913&single=true&output=csv';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhhlK70JwtkcnaL74C9fv9kk3ueYxgLWTN045YzPyX4nHAhuj_YJc2rzor_Oqox6JEWalc6AQ8IFAT/pub?output=csv';
 // Pour obtenir cette URL :
 // 1. Ouvre ton Google Sheet
 // 2. Fichier → Partager → Publier sur le web
@@ -690,7 +690,7 @@ async function loadData() {
   }
 
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('https://script.google.com/macros/s/AKfycbyOsndgveHKAs139EVcZZGR87d3py19BhDhrs_U4KjHN2ZeLpISrlVFUlmFYU1VsD1B/exec');
     if (!res.ok) throw new Error('Erreur réseau');
     const text = await res.text();
     let rows;
