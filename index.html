@@ -628,11 +628,11 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhhlK70J
 // 4. Copie l'URL et colle-la ici
 
 // Noms exacts de tes colonnes dans le sheet (sensible à la casse)
-const COL_PLAQUE       = 'Plaque';
-const COL_CHAUFFEUR    = 'Chauffeur';
+const COL_PLAQUE       = 'Plaque Définitive';
+const COL_CHAUFFEUR    = '';
 const COL_FORMULE      = 'Formule';
-const COL_MOIS         = 'Mois Restant';
-const COL_SHIFT        = 'Shift Restant';
+const COL_MOIS         = 'Temps restant Minimum (mois)';
+const COL_SHIFT        = 'Shifts restants';
 const COL_PART         = 'Part de la voiture déjà acquise';
 // ============================================================
 
@@ -659,9 +659,11 @@ function parseCSV(text) {
 function buildDriverMap(rows) {
   const map = {};
   rows.forEach(row => {
-    const plaque = (row[COL_PLAQUE] || '').toUpperCase().trim();
+    // Normalize key: strip BOM, quotes, spaces
+    const rawKey = Object.keys(row).find(k => k.replace(/^﻿/,'').trim() === 'Plaque Définitive');
+    const plaque = (rawKey ? row[rawKey] : '').toUpperCase().trim();
     if (!plaque) return;
-    map[plaque] = row; // always overwrite → last row wins
+    map[plaque] = row;
   });
   return map;
 }
@@ -706,7 +708,7 @@ function processData(rows) {
   const map = buildDriverMap(rows);
   allDrivers = Object.entries(map).map(([plaque, row]) => ({
     plaque,
-    chauffeur: row[COL_CHAUFFEUR] || '?',
+    chauffeur: row[''] || row[Object.keys(row)[1]] || '',
     formule: row[COL_FORMULE] || '—',
     moisRestant: row[COL_MOIS] || '0',
     shiftRestant: row[COL_SHIFT] || '0',
@@ -733,7 +735,7 @@ input.addEventListener('input', () => {
   suggestionsEl.innerHTML = matches.map(d => `
     <div class="suggestion-item" onclick="selectDriver('${d.plaque}')">
       <span class="plate-badge">${d.plaque}</span>
-      <span class="suggestion-name">${d.chauffeur}</span>
+      <span class="suggestion-name">${d.chauffeur || d.plaque}</span>
     </div>
   `).join('');
   suggestionsEl.style.display = 'block';
@@ -765,9 +767,10 @@ function selectDriver(plaque) {
   suggestionsEl.style.display = 'none';
 
   // Fill result
-  const initials = driver.chauffeur.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  const nameDisplay = driver.chauffeur || driver.plaque;
+  const initials = driver.plaque.replace(/[^A-Z0-9]/gi,'').substring(0,2).toUpperCase();
   document.getElementById('driver-avatar').textContent = initials;
-  document.getElementById('driver-name').textContent = driver.chauffeur;
+  document.getElementById('driver-name').textContent = nameDisplay;
   document.getElementById('driver-plate').textContent = driver.plaque;
   document.getElementById('formule-badge').textContent = driver.formule;
   document.getElementById('mois-restant').textContent = driver.moisRestant;
