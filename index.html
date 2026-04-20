@@ -640,21 +640,33 @@ const COL_PART         = 'Part de la voiture déjà acquise';
 
 let allDrivers = []; // { plaque, chauffeur, formule, moisRestant, shiftRestant, partAcquise }
 
-// Parse CSV
+// Parse CSV (handles quoted fields with commas)
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
+  const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^\ufeff/, ''));
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const cells = lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || lines[i].split(',');
+    if (!lines[i].trim()) continue;
+    const cells = parseCSVLine(lines[i]);
     const obj = {};
-    headers.forEach((h, idx) => {
-      obj[h] = (cells[idx] || '').replace(/^"|"$/g, '').trim();
-    });
+    headers.forEach((h, idx) => { obj[h] = (cells[idx] || '').trim(); });
     rows.push(obj);
   }
   return rows;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuote = !inQuote; }
+    else if (c === ',' && !inQuote) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
 }
 
 // Group by plate, keep last row per plate
@@ -710,11 +722,11 @@ function processData(rows) {
   const map = buildDriverMap(rows);
   allDrivers = Object.entries(map).map(([plaque, row]) => ({
     plaque,
-    chauffeur: row[''] || row[Object.keys(row)[1]] || '',
-    formule: row[COL_FORMULE] || '—',
-    moisRestant: row[COL_MOIS] || '0',
-    shiftRestant: row[COL_SHIFT] || '0',
-    partAcquise: parseFloat((row[COL_PART] || '0').replace('%','').replace(',','.')) || 0,
+    chauffeur: row[Object.keys(row)[1]] || '',
+    formule: getCol(row, COL_FORMULE) || '—',
+    moisRestant: getCol(row, COL_MOIS) || '0',
+    shiftRestant: getCol(row, COL_SHIFT) || '0',
+    partAcquise: parseFloat((getCol(row, COL_PART) || '0').replace('%','').replace(',','.')) || 0,
   }));
   const now = new Date();
   document.getElementById('last-update').textContent =
