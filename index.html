@@ -682,6 +682,11 @@ function buildDriverMap(rows) {
   return map;
 }
 
+function getCol(row, colName) {
+  const key = Object.keys(row).find(k => k.trim().replace(/^﻿/,'') === colName.trim());
+  return key ? row[key] : '';
+}
+
 // Load data (cached 1/day in sessionStorage)
 async function loadData() {
   const cacheKey = 'fleetch_data_' + new Date().toDateString();
